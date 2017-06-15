@@ -9,43 +9,40 @@ A server with php.
 ## Basic Installation
 * Copy everything on your server.
 * Make sure all requests are directed to the [index.php](https://github.com/coopattitude/coopgui/blob/master/index.php) file by your web server configuration.
-* Each time you change a file that generates CSS or JavaScript you have to delete the files in the [gen] folder. This forces coopgui to recreate these gen files and therefore allows the changes to be effective. __(?)pourquoi mettre cette phrase dans la partie installation ? Est-ce que ça a un rapport avec l'installation ?
 
 ## coopgui arborescence 
-this library works like this: to build a website the user creates daughter classes in [site](https://github.com/coopattitude/coopgui/tree/master/site) and [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins). This classes inherit from the classes inside the system folder. __(moi je trouvais ça important, pourquoi l'enlever ?)__ 
+system : contains the classes that the user can use in the site and the plugins folder
 
+site: the files that generate the site
 
-system : the classes that the user can reuse (=create a daughter class)
-plugins:
-gen:
-js:
+plugins: the plugins used by the site folder
 
-FB:
-vérifier classe fils/fille
-réécrire
-pas de détail
-le site appel desplugins qui appelle d'autre pollugins et ça permet de monter uns site web
-nested plugin explication conceptuellement (détaille plus bas ds #nestedplugin)
+js: the JavaScript files (other than the plugins' JavaScript files) __(?)dois-je dire que ça contient des "plugins" utilisable comme nicescroll ou jquery ?(/?)__
+
+gen: contains the generated CSS and JavaScript files
+
+font: contains the roboto font
+
+css: css files (other than the plugins' css files) __(?)Je vois que dans ce dossier il y a un dossier image avec des images dedans. Est-ce là qu'il faut mettre les images qu'on veut afficher sur le site ?(/?)__
+
+__(?)Dois-je détailler plus cette partie arborescence en détaillant les sous dossiers ?(/?)__
+
 
 ## How coopgui works
 
 ### HTML generation overview
-(The core of the generation is the plugins)
-Coopgui generates the HTML of a web page by calling plugins located in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. (Therefore) to create a web page you need to slice it in several parts and write a plugin for each part. Then specify the plugins that will be called/ to use/ instantiate those (?) plugins in the [site/index.php] file. 
-When a web browser sends a request, this [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed. This file successively calls all the plugins (it needs) and pass them options. Each plugin returns a string containing HTML to the index.php file which then appends everything into an array. Eventually the array is sent using echo. 
+Coopgui generates the HTML of a web page by calling plugins located in the [plugins](https://github.com/coopattitude/coopgui/tree/master/plugins) directory. To create a web page you need to slice it in several parts and write a plugin for each part. Then in the [site/index.php] file, specify the plugins that have to be called.
 
-A very important feature is that the plugins can be nested. For example when a plugin is called it calls __(is it the correct tense after when ?)__ another plugin. The latter returns his string containing HTML to the first which then appends it into his own html string and then returns it to the index.php file. You can nest as many plugins you want inside a plugin. Those plugins that are nested can themselves call as many plugins they want which themselves call as many plugins they want, etc. It is unlimited. This allows you do build a more complicated __(trouver autre mot)__ web page than just appending plugins one after the other. __(dernière phrase à reformuler)__
+When a web browser sends a request, this [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file, which is the main file of the site, is executed. This file successively calls all the plugins and pass them options. Each plugin returns a string containing HTML to the index.php file which then appends everything into an array. Eventually the array is sent using echo. 
 
-
-
-
+A very important feature is that the plugins can be nested. For example when a plugin is called it calls __(is this the correct tense to use after when ?)__ another plugin. The latter returns his string containing HTML to the first which then appends it into his own html string and then returns it to the index.php file. You can nest as many plugins you want inside a plugin. Those plugins that are nested can themselves call as many plugins they want which themselves call as many plugins they want, etc. It is unlimited. This allows you to build a more complex web page than just appending plugins one after the other.
 
 ## site/index.php
 The [site/index.php](https://github.com/coopattitude/coopgui/blob/master/site/index.php) file is the main file of the site. It is the first file to be executed and depending on the request it generates the appropriate web page by calling specific plugins.
 This file defines the class `IrIndex` and immediately creates an IrIndex object (and then calls his init method). 
 
 ### The constructor
-In the constructor, you have to instantiate these 4 classes like this :
+In the constructor of this `IrIndex` class, you have to instantiate these 4 classes like this :
 ```php
 $this->irCommander = new \IrCommander ($this->irCommander) ;
 $this->irEnvCustom = new \IrSystemEnvCustom ($this->irCommander) ;
@@ -54,18 +51,15 @@ $this->irGenJs = new \IrSystemGenJs ($this->irCommander, $this->irEnvCustom) ;
 ```
 __(?)pourquoi on envoie l'objet irCommander au constructeur alors qu'il est même pas créé encore ?(/?)__ 
 
-The [IrCommander] object allows you to... __(?)j'ai pas bien compris à quoi il servait. Il contient des variables qui indiquent s'il faut refaire le cache et des variables sur la version css et js. Il instancie IrGlobalVar et créé la fonction g pour que on puisse utiliser cet objet partout. Du coup je vois pas trop quelle est sa fonction(/?)__
+* The [IrCommander] object allows you to... __(?)j'ai pas bien compris à quoi il servait. Il contient des variables qui indiquent s'il faut refaire le cache et des variables sur la version css et js. Il instancie IrGlobalVar et créé la fonction g pour que on puisse utiliser cet objet partout. Du coup je vois pas trop comment je pourrais résumer la fonction de IrCommander(/?)__
 
-The [IrSystemEnvCustom] object allows you to store data to customize specific properties of the web page __(the envionnement ?)__. For example the color. __(?)oui mais c la couleur de quoi ? (/?)__ You have to give this object to the `IrGenCss` and `IrGenJS` objects so that they can take into account these custom properties. 
-__(?)dois-je préciser que ces quatres objets sont passé très souvent quand on créé un objet ?(/?)
+* The [IrSystemEnvCustom] object allows you to store data to customize specific properties of the web page __(the environnement ?)__. For example the color. __(?)oui mais c la couleur de quoi ? (/?)__ You have to give this object to the `IrSystemGenCss` and `IrSystemGenJS` objects so that they can take into account these custom properties. 
 
-The [IrSystemGenCss] and [IrSystemGenJs] objects will be used to generate the CSS and the JavaScript. See the cache section for more details.
+__(?)dois-je préciser que ces quatres objets (Commander, Custom, GenCss, GenJs) sont très souvent passés quand on créé un objet et que c'est ce qui leur permet d'avoir cette action global de chef d'orchestre ? vu qu'ils sont des attributs de tout le monde(/?)__
+
+* The [IrSystemGenCss] and [IrSystemGenJs] objects will be used to generate the CSS and the JavaScript. See the cache section for more details.
 (__insérer un lien vers l' encre de la section cache__)
 
-
-LC:
-personnalisation du cache -> fait
-personnalisation de l'environnement -> je ne vois pas quoi mettre dedans
 
 # HTML generation
 This IrIndex object that was just created __(quel temps utiliser ?)__ echos the HTML of the web page. The head method generates the head and the init method generates the body. 
